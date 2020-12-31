@@ -1,13 +1,10 @@
-use std::fs;
-use std::path::{Path, PathBuf};
-
 use eyre::{eyre, Result};
 use goblin::{peek_bytes, Hint};
-
-mod elf;
-
+use objpoke::elf;
 use regex::Regex;
 use std::convert::TryInto;
+use std::fs;
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -45,7 +42,7 @@ fn main() -> Result<()> {
         .and_then(|hint_bytes_slice| hint_bytes_slice.try_into().ok());
     let new_data = if let Some(hint_bytes) = hint_bytes {
         match peek_bytes(hint_bytes)? {
-            Hint::Elf(_) => elf::patch_elf(data, &keep_regexes)?,
+            Hint::Elf(_) => elf::localize_elf_symbols(data, &keep_regexes)?,
             Hint::Mach(_) | Hint::MachFat(_) => return Err(eyre!("Cannot handle mach objects")),
             Hint::PE => return Err(eyre!("Cannot handle PE objects")),
             _ => return Err(eyre!("Unknown input file type")),
