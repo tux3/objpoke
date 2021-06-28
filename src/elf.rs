@@ -95,6 +95,7 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
     let ctx = Ctx::new(container, endianness);
 
     'next_section: for header in section_headers.iter() {
+        // "The sh_flags member of the section header contains the value zero."
         if header.sh_type != SHT_GROUP || header.sh_flags != 0 {
             continue;
         }
@@ -118,6 +119,9 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
             ));
         }
 
+        // "The section header of the SHT_GROUP section specifies the identifying symbol entry.
+        //  The sh_link member contains the section header index of the symbol table section that contains the entry.
+        //  The sh_info member contains the symbol table index of the identifying entry"
         let symtab_idx = header.sh_link as usize;
         let sym_idx = header.sh_info as usize;
 
