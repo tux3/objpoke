@@ -4,7 +4,7 @@ use eyre::eyre;
 use goblin::container::{Container, Ctx};
 use goblin::elf::section_header::SHT_SYMTAB;
 use goblin::elf::sym::{
-    sym32, sym64, Sym, STB_GNU_UNIQUE, STB_LOCAL, STT_COMMON, STT_FUNC, STT_NOTYPE, STT_OBJECT,
+    sym32, sym64, Sym, STB_LOCAL, STT_COMMON, STT_FUNC, STT_NOTYPE, STT_OBJECT,
 };
 use goblin::elf::{Elf, SectionHeader};
 use goblin::strtab::Strtab;
@@ -65,13 +65,6 @@ fn localize_symtab_symbols(
                 }
             }
         } else {
-            continue 'next_symbol;
-        }
-
-        // STB_GNU_UNIQUE is a hack to bypass RTLD_LOCAL
-        // Apparently very few people understand exactly the semantics of GNU_UNIQUE,
-        // but objcopy refuses to localize it so we won't either.
-        if sym.st_bind() == STB_GNU_UNIQUE {
             continue 'next_symbol;
         }
 
