@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use eyre::eyre;
 use goblin::container::{Container, Ctx};
@@ -14,7 +14,7 @@ use scroll::Pread;
 pub struct ElfSymbolTableUpdate {
     pub header: SectionHeader,
     pub syms: Vec<Sym>,
-    pub sym_idx_map: HashMap<usize, usize>,
+    pub sym_idx_map: BTreeMap<usize, usize>,
 }
 
 pub fn sym_size(ctx: &Ctx) -> usize {
@@ -36,7 +36,7 @@ fn localize_symtab_symbols(
     let mut first_nonlocal_idx = orig_header.sh_info as usize;
 
     let mut syms = Vec::<Sym>::new();
-    let mut sym_idx_map = HashMap::<usize, usize>::new();
+    let mut sym_idx_map = BTreeMap::<usize, usize>::new();
 
     for idx in 0..count {
         syms.push(syms_data.pread_with(idx * sym_size, ctx).unwrap());
@@ -73,8 +73,12 @@ fn localize_symtab_symbols(
 
         // The symbol table must stay partitioned, with all locals first
         if idx > first_nonlocal_idx {
-            sym_idx_map.insert(idx, first_nonlocal_idx);
-            sym_idx_map.insert(first_nonlocal_idx, idx);
+            let maybe_prev = sym_idx_map.insert(first_nonlocal_idx, idx);
+            if let Some(prev) = maybe_prev {
+                sym_idx_map.insert(prev, first_nonlocal_idx);
+            } else {
+                sym_idx_map.insert(idx, first_nonlocal_idx);
+            }
         }
         first_nonlocal_idx += 1;
     }
@@ -82,6 +86,14 @@ fn localize_symtab_symbols(
     for (old_idx, new_idx) in &sym_idx_map {
         if old_idx < new_idx {
             syms.swap(*old_idx, *new_idx);
+        }
+    }
+
+    for (idx, sym) in syms.iter().enumerate() {
+        if idx < first_nonlocal_idx {
+            debug_assert_ne!(sym.st_bind(), STB_LOCAL);
+        } else {
+            debug_assert_eq!(sym.st_bind(), STB_LOCAL);
         }
     }
 
