@@ -9,7 +9,7 @@ categories = ["command-line-utilities", "development-tools::build-utils"]
 description = "Minimal in-place objcopy replacement"
 
 [dependencies]
-goblin = "0.3"
+goblin = "0.4.3"
 eyre = "0.6.3"
 scroll = "0.10"
 structopt = "0.3"

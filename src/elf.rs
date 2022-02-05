@@ -76,7 +76,9 @@ fn patch_new_elf_symbols(
         } else if header.sh_type == SHT_SYMTAB_SHNDX {
             // SYMTAB_SHNDX entries match the symtab entry order 1:1, so we just apply the same swaps
             let symtab_idx_map = shndx_to_symtab_map.get(&sh_idx).unwrap();
-            let shndx_range = header.file_range();
+            let shndx_range = header
+                .file_range()
+                .expect("Symtab SHNDX without file range");
             let shndx_data = &mut data[shndx_range.start..shndx_range.end];
             for (old_idx, new_idx) in symtab_idx_map {
                 if old_idx < new_idx {
@@ -125,7 +127,9 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
             continue;
         }
 
-        let group_range = header.file_range();
+        let group_range = header
+            .file_range()
+            .expect("Section header without file range");
         let group_data = &data[group_range.start..group_range.end];
         if group_data.len() < 4 {
             continue; // Not Supposed To Happen, but can't be too careful with wild ELFs...
@@ -159,7 +163,9 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
                 ));
             }
         };
-        let symtab_range = symtab.file_range();
+        let symtab_range = symtab
+            .file_range()
+            .expect("Symtab section without file range");
         let symtab_data = &data[symtab_range.start..symtab_range.end];
         let sym_size = sym_size(&ctx);
         let name_sym: Sym = symtab_data.pread_with(sym_idx * sym_size, ctx).unwrap();
@@ -176,7 +182,7 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
             Strtab::parse(&data, shdr.sh_offset as usize, shdr.sh_size as usize, 0x0)
         }?;
 
-        if let Some(Ok(name)) = strtab.get(name_sym.st_name) {
+        if let Some(name) = strtab.get_at(name_sym.st_name) {
             for regex in keep_regexes {
                 if regex.is_match(name) {
                     continue 'next_section;

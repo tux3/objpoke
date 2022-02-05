@@ -83,7 +83,9 @@ pub fn process_elf_relocations(
         let rel_size = rel_size(ctx, section);
         let count = section.sh_size as usize / rel_size;
 
-        let range = section.file_range();
+        let range = section
+            .file_range()
+            .expect("Relocation without without file range");
         let rel_data = &data[range.start..range.end];
         let update = process_elf_rel_section(
             ctx,
