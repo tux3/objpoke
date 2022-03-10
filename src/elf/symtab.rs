@@ -49,7 +49,7 @@ fn localize_symtab_symbols(
     {
         #[allow(clippy::match_like_matches_macro)]
         let is_code_or_data = match sym.st_type() {
-            STT_NOTYPE => false,             // Likely an undefined symbol
+            STT_NOTYPE => true,              // ASM code/data symbols have NOTYPE
             STT_FUNC => true,                // Code
             STT_OBJECT | STT_COMMON => true, // Data
             _ => false,
