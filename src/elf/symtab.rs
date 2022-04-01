@@ -58,7 +58,7 @@ fn localize_symtab_symbols(
         if sym.st_name == 0 || is_undef || !is_code_or_data {
             continue;
         }
-        if let Some(name) = strtab.get_at(sym.st_name) {
+        if let Some(Ok(name)) = strtab.get(sym.st_name) {
             for regex in keep_regexes {
                 if regex.is_match(name) {
                     continue 'next_symbol;

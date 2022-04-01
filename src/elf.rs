@@ -182,7 +182,7 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
             Strtab::parse(&data, shdr.sh_offset as usize, shdr.sh_size as usize, 0x0)
         }?;
 
-        if let Some(name) = strtab.get_at(name_sym.st_name) {
+        if let Some(Ok(name)) = strtab.get(name_sym.st_name) {
             for regex in keep_regexes {
                 if regex.is_match(name) {
                     continue 'next_section;
