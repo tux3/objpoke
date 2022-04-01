@@ -3,7 +3,7 @@ mod symtab;
 
 use crate::elf::reloc::{rel_size, ElfRelocationUpdate};
 use crate::elf::symtab::{sym_size, ElfSymbolTableUpdate};
-use eyre::{bail, eyre, Result};
+use anyhow::{anyhow, bail, Result};
 use goblin::container::{Container, Ctx};
 use goblin::elf::section_header::{
     section_header32, section_header64, SHT_GNU_HASH, SHT_GNU_VERSYM, SHT_HASH, SHT_NULL, SHT_RELA,
@@ -91,7 +91,7 @@ fn patch_new_elf_symbols(
         } else if header.sh_type == SHT_GNU_VERSYM {
             // We could handle those by reordering the entries, but it's not always enough
             // If we're trying to localize a versioned symbol, we'd need to modify other sections
-            return Err(eyre!("Cannot handle GNU_VERSYM ELF sections"));
+            return Err(anyhow!("Cannot handle GNU_VERSYM ELF sections"));
         } else if let Some(new_symtab) = new_symtabs.remove(&sh_idx) {
             for (sym_idx, sym) in new_symtab.syms.into_iter().enumerate() {
                 let offset = new_symtab.header.sh_offset as usize + sym_idx * sym_size;
@@ -142,7 +142,7 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
             // It's probably safe to unset just GRP_COMDAT, but I can't rule out that someone
             // will create a new flag that _only_ makes sense alongside GRP_COMDAT,
             // so out of an abundance of caution let's reject unknown group flags
-            return Err(eyre!(
+            return Err(anyhow!(
                 "COMDAT section group also contains unknown flags ({}), refusing to continue",
                 group_flags
             ));
@@ -157,7 +157,7 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
         let symtab = match section_headers.get(symtab_idx) {
             Some(symtab) => symtab,
             None => {
-                return Err(eyre!(
+                return Err(anyhow!(
                     "Section group references invalid symbol table index: {}",
                     symtab_idx
                 ));
@@ -172,7 +172,7 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
         let strtab_idx = symtab.sh_link as usize;
 
         let strtab = if strtab_idx >= section_headers.len() {
-            return Err(eyre!(
+            return Err(anyhow!(
                 "Section group symbol references invalid string table index: {}",
                 strtab_idx
             ));

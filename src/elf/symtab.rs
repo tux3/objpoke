@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use eyre::eyre;
+use anyhow::anyhow;
 use goblin::container::{Container, Ctx};
 use goblin::elf::section_header::SHT_SYMTAB;
 use goblin::elf::sym::{
@@ -99,7 +99,7 @@ pub fn localize_elf_symbols(
     ctx: Ctx,
     data: &[u8],
     keep_regexes: &[Regex],
-) -> eyre::Result<HashMap<usize, ElfSymbolTableUpdate>> {
+) -> anyhow::Result<HashMap<usize, ElfSymbolTableUpdate>> {
     let mut symtab_updates = HashMap::<usize, ElfSymbolTableUpdate>::new();
     for (idx, section) in elf.section_headers.iter().enumerate() {
         if section.sh_type == SHT_SYMTAB {
@@ -108,7 +108,7 @@ pub fn localize_elf_symbols(
 
             let strtab_idx = section.sh_link as usize;
             let strtab = if strtab_idx >= elf.section_headers.len() {
-                return Err(eyre!(
+                return Err(anyhow!(
                     "Symbol table references invalid string table index: {}",
                     strtab_idx
                 ));

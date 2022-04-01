@@ -1,4 +1,4 @@
-use eyre::{eyre, Result};
+use anyhow::{anyhow, Result};
 use goblin::{peek_bytes, Hint};
 use objpoke::elf;
 use regex::Regex;
@@ -30,7 +30,7 @@ struct Opt {
 fn main() -> Result<()> {
     let opt = Opt::from_args();
     if opt.keep_symbols.is_empty() && opt.keep_comdat_sections.is_empty() {
-        return Err(eyre!("No action specified"));
+        return Err(anyhow!("No action specified"));
     }
     let keep_regexes = opt
         .keep_symbols
@@ -61,12 +61,12 @@ fn main() -> Result<()> {
                 }
                 patched_data
             }
-            Hint::Mach(_) | Hint::MachFat(_) => return Err(eyre!("Cannot handle mach objects")),
-            Hint::PE => return Err(eyre!("Cannot handle PE objects")),
-            _ => return Err(eyre!("Unknown input file type")),
+            Hint::Mach(_) | Hint::MachFat(_) => return Err(anyhow!("Cannot handle mach objects")),
+            Hint::PE => return Err(anyhow!("Cannot handle PE objects")),
+            _ => return Err(anyhow!("Unknown input file type")),
         }
     } else {
-        return Err(eyre!("Input object is too small"));
+        return Err(anyhow!("Input object is too small"));
     };
 
     fs::write(opt.output, new_data)?;
