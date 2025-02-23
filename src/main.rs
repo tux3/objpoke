@@ -5,30 +5,28 @@ use regex::Regex;
 use std::convert::TryInto;
 use std::fs;
 use std::path::{Path, PathBuf};
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "objpoke")]
+#[derive(Parser, Debug)]
+#[command(version, about)]
 struct Opt {
     /// Accepts regexes of the symbol names to keep global, and localizes the rest
-    #[structopt(short, long, number_of_values = 1)]
+    #[arg(short, long, num_args = 1)]
     keep_symbols: Vec<String>,
 
     /// Accepts regexes of the GRP_COMDAT section groups to keep, the rest becomes regular groups
-    #[structopt(long, number_of_values = 1)]
+    #[arg(long, num_args = 1)]
     keep_comdat_sections: Vec<String>,
 
     /// Input object
-    #[structopt(name = "input", parse(from_os_str))]
     input: PathBuf,
 
     /// Output object
-    #[structopt(name = "output", parse(from_os_str))]
     output: PathBuf,
 }
 
 fn main() -> Result<()> {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
     if opt.keep_symbols.is_empty() && opt.keep_comdat_sections.is_empty() {
         return Err(anyhow!("No action specified"));
     }
