@@ -1,11 +1,13 @@
 use anyhow::{anyhow, Result};
+use clap::Parser;
 use goblin::{peek_bytes, Hint};
 use objpoke::elf;
 use regex::Regex;
-use std::convert::TryInto;
-use std::fs;
-use std::path::{Path, PathBuf};
-use clap::Parser;
+use std::{
+    convert::TryInto,
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -58,7 +60,7 @@ fn main() -> Result<()> {
                     patched_data = elf::demote_comdat_groups(patched_data, &keep_comdat_regexes)?
                 }
                 patched_data
-            }
+            },
             Hint::Mach(_) | Hint::MachFat(_) => return Err(anyhow!("Cannot handle mach objects")),
             Hint::PE => return Err(anyhow!("Cannot handle PE objects")),
             _ => return Err(anyhow!("Unknown input file type")),
