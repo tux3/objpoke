@@ -10,8 +10,7 @@ description = "Minimal in-place objcopy replacement"
 
 [dependencies]
 objpoke = { path = "../objpoke" }
-
-anyhow = { version = "1.0.96", features = ["backtrace"] }
-goblin = "=0.4.1"
+anyhow = { workspace = true, features = ["backtrace"] }
+goblin = { workspace = true }
+regex = { workspace = true }
 clap = { version = "4.5.31", features = ["derive"] }
-regex = "1.11.1"

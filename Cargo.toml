@@ -4,3 +4,8 @@ members = [
     "objpoke",
     "objpoke-cli",
 ]
+
+[workspace.dependencies]
+anyhow = { version = "1.0.96", features = ["backtrace"] }
+goblin = "0.9.3"
+regex = "1.11.1"

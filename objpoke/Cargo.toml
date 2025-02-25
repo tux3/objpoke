@@ -5,11 +5,11 @@ authors = ["tux3 <barrdetwix@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/tux3/objpoke/"
-categories = ["command-line-utilities", "development-tools::build-utils"]
+categories = ["development-tools::build-utils"]
 description = "Minimal in-place objcopy replacement"
 
 [dependencies]
-anyhow = { version = "1.0.56", features = ["backtrace"] }
-goblin = "0.9.3"
+anyhow = { workspace = true }
+regex = { workspace = true }
+goblin = { workspace = true }
 scroll = "0.12"
-regex = "1"
