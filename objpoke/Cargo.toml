@@ -12,4 +12,4 @@ description = "Minimal in-place objcopy replacement"
 anyhow = { workspace = true }
 regex = { workspace = true }
 goblin = { workspace = true }
-scroll = "0.12"
+scroll = "0.10"
