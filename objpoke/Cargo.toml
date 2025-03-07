@@ -1,0 +1,15 @@
+[package]
+name = "objpoke"
+version = "0.3.0"
+authors = ["tux3 <barrdetwix@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tux3/objpoke/"
+categories = ["development-tools::build-utils"]
+description = "Minimal in-place objcopy replacement"
+
+[dependencies]
+anyhow = { workspace = true }
+regex = { workspace = true }
+goblin = { workspace = true }
+scroll = "0.10"

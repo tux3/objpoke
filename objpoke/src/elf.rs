@@ -1,20 +1,25 @@
 mod reloc;
 mod symtab;
 
-use crate::elf::reloc::{rel_size, ElfRelocationUpdate};
-use crate::elf::symtab::{sym_size, ElfSymbolTableUpdate};
-use anyhow::{anyhow, bail, Result};
-use goblin::container::{Container, Ctx};
-use goblin::elf::section_header::{
-    section_header32, section_header64, SHT_GNU_HASH, SHT_GNU_VERSYM, SHT_HASH, SHT_NULL, SHT_RELA,
-    SHT_SYMTAB_SHNDX,
+use crate::elf::{
+    reloc::{rel_size, ElfRelocationUpdate},
+    symtab::{sym_size, ElfSymbolTableUpdate},
 };
-use goblin::elf::{Elf, Header, SectionHeaders, Sym};
-use goblin::elf32::section_header::SHT_GROUP;
-use goblin::strtab::Strtab;
+use anyhow::{anyhow, bail, Result};
+use goblin::{
+    container::{Container, Ctx},
+    elf::{
+        section_header::{
+            section_header32, section_header64, SHT_GNU_HASH, SHT_GNU_VERSYM, SHT_HASH, SHT_NULL, SHT_RELA,
+            SHT_SYMTAB_SHNDX,
+        },
+        Elf, Header, SectionHeaders, Sym,
+    },
+    elf32::section_header::SHT_GROUP,
+    strtab::Strtab,
+};
 use regex::Regex;
-use scroll::ctx::IntoCtx;
-use scroll::{Pread, Pwrite};
+use scroll::{ctx::IntoCtx, Pread, Pwrite};
 use std::collections::HashMap;
 
 const GRP_COMDAT: u32 = 1; // Per https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter7-26.html
@@ -29,14 +34,7 @@ pub fn localize_elf_symbols(data: Vec<u8>, keep_regexes: &[Regex]) -> Result<Vec
     let new_symtabs = symtab::localize_elf_symbols(&elf, ctx, &data, keep_regexes)?;
     let new_relocs = reloc::process_elf_relocations(&elf, ctx, &data, &new_symtabs);
 
-    patch_new_elf_symbols(
-        elf.header,
-        section_headers,
-        ctx,
-        data,
-        new_symtabs,
-        new_relocs,
-    )
+    patch_new_elf_symbols(elf.header, section_headers, ctx, data, new_symtabs, new_relocs)
 }
 
 fn patch_new_elf_symbols(
@@ -62,9 +60,7 @@ fn patch_new_elf_symbols(
             }
             match new_symtabs.get_mut(&(header.sh_link as usize)) {
                 None => bail!("SYMTAB_SHNDX ELF section references invalid symtab in sh_link"),
-                Some(symtab) => {
-                    shndx_to_symtab_map.insert(sh_idx, std::mem::take(&mut symtab.sym_idx_map))
-                }
+                Some(symtab) => shndx_to_symtab_map.insert(sh_idx, std::mem::take(&mut symtab.sym_idx_map)),
             };
         }
     }
@@ -76,9 +72,7 @@ fn patch_new_elf_symbols(
         } else if header.sh_type == SHT_SYMTAB_SHNDX {
             // SYMTAB_SHNDX entries match the symtab entry order 1:1, so we just apply the same swaps
             let symtab_idx_map = shndx_to_symtab_map.get(&sh_idx).unwrap();
-            let shndx_range = header
-                .file_range()
-                .expect("Symtab SHNDX without file range");
+            let shndx_range = header.file_range().expect("Symtab SHNDX without file range");
             let shndx_data = &mut data[shndx_range.start..shndx_range.end];
             for (old_idx, new_idx) in symtab_idx_map {
                 if old_idx < new_idx {
@@ -127,9 +121,7 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
             continue;
         }
 
-        let group_range = header
-            .file_range()
-            .expect("Section header without file range");
+        let group_range = header.file_range().expect("Section header without file range");
         let group_data = &data[group_range.start..group_range.end];
         if group_data.len() < 4 {
             continue; // Not Supposed To Happen, but can't be too careful with wild ELFs...
@@ -161,11 +153,9 @@ pub fn demote_comdat_groups(mut data: Vec<u8>, keep_regexes: &[Regex]) -> Result
                     "Section group references invalid symbol table index: {}",
                     symtab_idx
                 ));
-            }
+            },
         };
-        let symtab_range = symtab
-            .file_range()
-            .expect("Symtab section without file range");
+        let symtab_range = symtab.file_range().expect("Symtab section without file range");
         let symtab_data = &data[symtab_range.start..symtab_range.end];
         let sym_size = sym_size(&ctx);
         let name_sym: Sym = symtab_data.pread_with(sym_idx * sym_size, ctx).unwrap();
