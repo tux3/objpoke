@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 
 use anyhow::anyhow;
-use goblin::container::{Container, Ctx};
-use goblin::elf::section_header::SHT_SYMTAB;
-use goblin::elf::sym::{
-    sym32, sym64, Sym, STB_LOCAL, STT_COMMON, STT_FUNC, STT_NOTYPE, STT_OBJECT,
+use goblin::{
+    container::{Container, Ctx},
+    elf::{
+        section_header::SHT_SYMTAB,
+        sym::{sym32, sym64, Sym, STB_LOCAL, STT_COMMON, STT_FUNC, STT_NOTYPE, STT_OBJECT},
+        Elf, SectionHeader,
+    },
+    strtab::Strtab,
 };
-use goblin::elf::{Elf, SectionHeader};
-use goblin::strtab::Strtab;
 use regex::Regex;
 use scroll::Pread;
 
@@ -42,11 +44,7 @@ fn localize_symtab_symbols(
         syms.push(syms_data.pread_with(idx * sym_size, ctx).unwrap());
     }
 
-    'next_symbol: for (idx, sym) in syms
-        .iter_mut()
-        .enumerate()
-        .skip(first_nonlocal_idx as usize)
-    {
+    'next_symbol: for (idx, sym) in syms.iter_mut().enumerate().skip(first_nonlocal_idx) {
         #[allow(clippy::match_like_matches_macro)]
         let is_code_or_data = match sym.st_type() {
             STT_NOTYPE => true,              // ASM code/data symbols have NOTYPE
@@ -87,11 +85,7 @@ fn localize_symtab_symbols(
 
     let mut header = orig_header.clone();
     header.sh_info = first_nonlocal_idx as u32;
-    ElfSymbolTableUpdate {
-        header,
-        syms,
-        sym_idx_map,
-    }
+    ElfSymbolTableUpdate { header, syms, sym_idx_map }
 }
 
 pub fn localize_elf_symbols(
@@ -120,14 +114,7 @@ pub fn localize_elf_symbols(
 
             let range = section.file_range().expect("Section without file range");
             let syms_data = &data[range.start..range.end];
-            let update = localize_symtab_symbols(
-                ctx,
-                syms_data,
-                count as usize,
-                section,
-                strtab,
-                keep_regexes,
-            );
+            let update = localize_symtab_symbols(ctx, syms_data, count as usize, section, strtab, keep_regexes);
             symtab_updates.insert(idx, update);
         }
     }

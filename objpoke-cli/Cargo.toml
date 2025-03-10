@@ -1,0 +1,16 @@
+[package]
+name = "objpoke-cli"
+version = "0.3.0"
+authors = ["tux3 <barrdetwix@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tux3/objpoke/"
+categories = ["command-line-utilities", "development-tools::build-utils"]
+description = "Minimal in-place objcopy replacement"
+
+[dependencies]
+objpoke = { path = "../objpoke" }
+anyhow = { workspace = true, features = ["backtrace"] }
+goblin = { workspace = true }
+regex = { workspace = true }
+clap = { version = "4.5.31", features = ["derive"] }

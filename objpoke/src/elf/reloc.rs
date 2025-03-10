@@ -1,9 +1,13 @@
 use std::collections::HashMap;
 
-use goblin::container::{Container, Ctx};
-use goblin::elf::reloc::{reloc32, reloc64};
-use goblin::elf::section_header::{SHT_REL, SHT_RELA};
-use goblin::elf::{Elf, Reloc, SectionHeader};
+use goblin::{
+    container::{Container, Ctx},
+    elf::{
+        reloc::{reloc32, reloc64},
+        section_header::{SHT_REL, SHT_RELA},
+        Elf, Reloc, SectionHeader,
+    },
+};
 use scroll::Pread;
 
 use crate::elf::symtab::ElfSymbolTableUpdate;
@@ -21,14 +25,14 @@ pub fn rel_size(ctx: Ctx, section: &SectionHeader) -> usize {
             } else {
                 reloc32::SIZEOF_REL
             }
-        }
+        },
         Container::Big => {
             if section.sh_type == SHT_RELA {
                 reloc64::SIZEOF_RELA
             } else {
                 reloc64::SIZEOF_REL
             }
-        }
+        },
     }
 }
 
@@ -53,10 +57,7 @@ fn process_elf_rel_section(
         }
     }
 
-    ElfRelocationUpdate {
-        header: header.clone(),
-        rels,
-    }
+    ElfRelocationUpdate { header: header.clone(), rels }
 }
 
 pub fn process_elf_relocations(
@@ -83,18 +84,9 @@ pub fn process_elf_relocations(
         let rel_size = rel_size(ctx, section);
         let count = section.sh_size as usize / rel_size;
 
-        let range = section
-            .file_range()
-            .expect("Relocation without without file range");
+        let range = section.file_range().expect("Relocation without without file range");
         let rel_data = &data[range.start..range.end];
-        let update = process_elf_rel_section(
-            ctx,
-            rel_data,
-            count as usize,
-            rel_size,
-            section,
-            symtab_update,
-        );
+        let update = process_elf_rel_section(ctx, rel_data, count, rel_size, section, symtab_update);
         relocation_updates.insert(idx, update);
     }
     relocation_updates
