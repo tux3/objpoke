@@ -8,6 +8,10 @@ repository = "https://github.com/tux3/objpoke/"
 categories = ["command-line-utilities", "development-tools::build-utils"]
 description = "Minimal in-place objcopy replacement"
 
+[[bin]]
+name = "objpoke"
+path = "src/main.rs"
+
 [dependencies]
 objpoke = { path = "../objpoke" }
 anyhow = { workspace = true, features = ["backtrace"] }
