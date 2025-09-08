@@ -1,6 +1,6 @@
 [package]
 name = "objpoke"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["tux3 <barrdetwix@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
